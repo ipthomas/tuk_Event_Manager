@@ -1,0 +1,9 @@
+{
+    "id": "xdsrepsrvc",
+    "desc": "Tiani Spirit WS API XDS Repository Service",
+    "scheme": "http",
+    "host": "spirit-test-01.tianispirit.co.uk",
+    "port": 8181,
+    "url": "SpiritEhrWsRemoting/EhrWSRemoting",
+    "contexttimeout": 5000
+}

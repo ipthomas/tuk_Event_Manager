@@ -1,0 +1,46 @@
+{{define "snip_workflow_header"}}
+<div class="container-fluid">
+    <div class="center-block">
+        <div class="row">
+            <div class="col-sm-1">
+                <label style="text-align: center;color: darkblue" for="conf">Conf Code</label>
+                <p id="conf" name="conf">{{.WorkflowDefinition.Confidentialitycode}}</p>
+            </div>
+            <div class="col-sm-2">
+                <label style="text-align: center;color: darkblue" for="user">Opened By</label>
+                <p id="user" name="user">{{.XDWWorkflowDocument.Author.AssignedAuthor.AssignedPerson.Name.Prefix}} {{.XDWWorkflowDocument.Author.AssignedAuthor.AssignedPerson.Name.Family}}</p>
+            </div>
+            <div class="col-sm-2">
+                <label style="text-align: center;color: darkblue" for="lupdt">Last Update</label>
+                <p id="lupdt" name="lupdt">{{.PrettyTime .LastUpdateTime}}</p>
+            </div>
+            <div class="col-sm-2">
+                <label style="text-align: center;color: darkblue" for="comby">Complete By</label>
+                <p id="comby" name="comby">{{.PrettyTime .CompletionTime}}</p>
+            </div>
+            <div class="col-sm-1">
+                {{if .IsWorkflowOverdue}}
+                <label style="text-align: center;color: darkblue" for="overdue">Overdue</label>
+                <p id="overdue" name="overdue" style="color: rgb(255, 170, 0)"><i class="fa fa-thumbs-down"></i> YES</p>
+                {{else}}
+                <label style="text-align: center;color: darkblue" for="overdue">Overdue</label>
+                <p id="overdue" name="overdue" style="color: green"><i class="fa fa-thumbs-up"></i> NO</p>
+                {{end}}
+            </div>
+            <div class="col-sm-2">
+                <label style="text-align: center;color: darkblue" for="elapsedtime">Elapsed Time</label>
+                 {{if .IsWorkflowOverdue}}
+                    <p style="color: darkorange;" id="elapsedtime" name="elapsedtime">{{.ElapsedTime}}</p>
+                {{else}}
+                    <p style="color: green;" id="elapsedtime" name="elaspedtime">{{.ElapsedTime}}</p>
+                {{end}}
+            </div>
+            <div class="col-sm-2">
+                <label style="text-align: center;color: darkblue" for="timeleft">Time Remaining</label>
+                <p id="timeleft" name="timeleft">{{.WorkflowTimeRemaining}}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{end}}

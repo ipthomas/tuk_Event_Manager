@@ -1,0 +1,11 @@
+{
+    "id": "pdqv3srvc",
+    "desc": "IHE PDQv3 Server",
+    "scheme": "http",
+    "host": "spirit-test-01.tianispirit.co.uk",
+    "port": 8081,
+    "url": "SpiritPIX/PDQSupplier",
+    "cachetimeout": 720,
+    "cacheenabled": false,
+    "contexttimeout": 5000
+}

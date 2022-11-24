@@ -1,0 +1,9 @@
+{
+    "id": "xdsregsrvc",
+    "desc": "Tiani Spirit IHE XDS Registry Service",
+    "scheme": "http",
+    "host": "spirit-test-01.tianispirit.co.uk",
+    "port": 8081,
+    "url": "SpiritXDSRegistry/Reg1",
+    "contexttimeout": 10000
+}

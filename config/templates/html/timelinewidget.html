@@ -1,0 +1,101 @@
+{{define "timelinewidget"}}
+{{$event := .}}
+{{$vers := .Vers}}
+<div class="center-block">
+    <div class="row">
+        <div class="col-sm-12">
+            <h5 style="text-align:center;color:darkblue">{{.GetMappedId .Pathway}} Timeline for {{.NHSId}} Version {{.Vers}}</h5>
+        </div>
+    </div>
+    {{template "horizontalline"}}
+    <div class="row">
+        <div class="col-sm-12">
+            <div style="display:inline-block;width:100%;overflow-y:auto;margin-left: 2%;">
+                <ul class="timeline">
+                    {{range $k,$t := .XDWWorkflowDocument.TaskList.XDWTask}}
+                    <li class="timeline-item">
+                        <a href="{{$event.EventServices.EventService.EventUrl}}?act=widget&task=xdw&taskid={{$t.TaskData.TaskDetails.ID}}&pathway={{$event.Pathway}}&nhs={{$event.NHSId}}&vers={{$vers}}&user={{$event.EventServices.EventService.User}}&org={{$event.EventServices.EventService.Org}}&role={{$event.EventServices.EventService.Role}}"
+                            target="workflowItem">
+                        {{if $event.IsTaskOverdue $t.TaskData.TaskDetails.ID}}
+                            <div class="timeline-badge warning"><i class="fa fa-thumbs-down"></i></div>
+                        {{else}}
+                            {{if eq $t.TaskData.TaskDetails.Status "COMPLETE"}}
+                                <div class="timeline-badge success"><i class="fa fa-thumbs-up"></i></div>
+                            {{else}}
+                                <div class="timeline-badge primary"><i class="fa fa-thumbs-up"></i></div>
+                            {{end}}
+                        {{end}}
+                        </a>
+                        <div class="timeline-panel">
+                            <div class="timeline-heading">
+                                {{if eq $t.TaskData.TaskDetails.Status "COMPLETE"}}
+                                    <h6 class="timeline-title" style="color:darkgreen">Task {{$t.TaskData.TaskDetails.ID}} {{$t.TaskData.Description}}</h6>
+                                {{else}}
+                                    <h6 class="timeline-title" style="color:darkblue">Task {{$t.TaskData.TaskDetails.ID}} {{$t.TaskData.Description}}</h6>
+                                {{end}}
+                            </div>
+                            <div class="timeline-body">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <label style="color:darkblue">Type</label>
+                                        <p>{{$t.TaskData.TaskDetails.TaskType}}</p>
+                                    </div>
+                                    <div class="col-sm-5">
+                                        <label style="color:darkblue">Owner</label>
+                                        <p>{{$t.TaskData.TaskDetails.ActualOwner}}</p>                            
+                                    </div>
+                                    <div class="col-sm-2">
+                                        <label style="color:darkblue">Status</label>
+                                        {{if eq $t.TaskData.TaskDetails.Status "COMPLETE"}}
+                                            <p style="color:darkgreen">{{$t.TaskData.TaskDetails.Status}}</p>
+                                        {{else}}
+                                            <p>{{$t.TaskData.TaskDetails.Status}}</p>
+                                        {{end}}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <label style="color:darkblue">Started</label>
+                                        <p>{{$event.PrettyTime $t.TaskData.TaskDetails.ActivationTime}}</p>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        {{if eq $t.TaskData.TaskDetails.Status "COMPLETE"}}
+                                            <label style="color:darkblue">Completed On</label>
+                                        {{else}}
+                                            <label style="color:darkblue">Updated</label>
+                                        {{end}}
+                                        {{if $event.IsTaskOverdue $t.TaskData.TaskDetails.ID}}
+                                            <p style="color:darkorange">{{$event.PrettyTime $t.TaskData.TaskDetails.LastModifiedTime}}</p>
+                                        {{else}}
+                                            <p>{{$event.PrettyTime $t.TaskData.TaskDetails.LastModifiedTime}}</p>
+                                        {{end}}
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label style="color:darkblue">Complete By</label>
+                                        <p>{{$event.TaskCompleteByTimeString $t.TaskData.TaskDetails.ID}}</p>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-8">
+                                        <label style="color:darkblue">Duration</label>
+                                        <p>{{$event.TaskDuration $t.TaskData.TaskDetails.ID}}</p>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <label style="color:darkblue">Overdue</label>
+                                        {{if $event.IsTaskOverdue $t.TaskData.TaskDetails.ID}}
+                                        <p style="color:darkorange">Yes</p>
+                                        {{else}}
+                                        <p style="color:darkgreen">No</p>
+                                        {{end}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {{end}}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}

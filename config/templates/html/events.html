@@ -1,0 +1,49 @@
+{{define "events"}} 
+{{template "header" .}}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <h3 style="text-align:center;color:darkblue">{{.Pathway}} {{len .DBEvents}} Events</h3>
+        </div>
+    </div>
+    {{range .DBEvents}}
+        {{if ne .Id 0}}
+        <div class="row">
+                <div class="col-sm-2">
+                <label style="color:darkblue" for="pathway">Pathway</label>
+                <p id="pathway" name="pathway">{{.Pathway}}</p>
+            </div>
+            <div class="col-sm-2">
+                <label style="color:darkblue" for="expression">Event</label>
+                <p id="expression" name="expression">{{.Expression}}</p>
+            </div>
+            <div class="col-sm-1">
+                <label style="color:darkblue" for="topic">Task</label>
+                <p id="topic" name="topic">{{.TaskId}}</p>
+            </div>
+            <div class="col-sm-2">
+                <label style="color:darkblue" for="authors">Created By</label>
+                <p id="authors" name="authors">{{.Authors}}</p>
+            </div>
+            <div class="col-sm-1">
+                <label style="color:darkblue" for="nhs">For Patient</label>
+                <p id="nhs" name="nhs">{{.NhsId}}</p>
+            </div>
+            <div class="col-sm-2">
+                <label style="color:darkblue" for="created">Created</label>
+                <p id="created" name="created">{{.Creationtime}}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <label style="color:darkblue" for="notes">Notes</label>
+                <textarea disabled id="notes" name="notes">{{.Comments}}</textarea>
+            </div>
+        </div>
+        {{template "horizontalline"}}
+        {{end}}
+    {{end}}
+</div>
+</body>
+{{template "footer"}}
+{{end}}

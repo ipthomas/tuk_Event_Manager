@@ -1,0 +1,9 @@
+{
+    "id": "brokersrvc",
+    "desc": "IHE DSUB Broker",
+    "scheme": "http",
+    "host": "spirit-test-01.tianispirit.co.uk",
+    "port": 8081,
+    "url": "SpiritXDSDsub/Dsub",
+    "contexttimeout": 3000
+}

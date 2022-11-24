@@ -25,4 +25,3 @@ To Deploy:
 
     6)  Start Event Manager
             From the folder you installed the package into... run 'go main/main.go'
-# tuk_Event_Manager

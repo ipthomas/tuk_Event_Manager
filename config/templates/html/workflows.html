@@ -1,0 +1,54 @@
+{{define "workflows"}} 
+{{ template "header" .}}
+{{$url := .EventServices.EventService.EventUrl}}
+{{$saml:= .SAML}}
+{{$usr := .EventServices.EventService.User}}
+{{$org := .EventServices.EventService.Org}}
+{{$role := .EventServices.EventService.Role}}
+{{$pw := .Pathway}}
+{{$nhsid := .NHSId}}
+{{$event := .}}
+<div class="container-fluid">
+    {{template "horizontalline"}}
+    <div class="row">
+        <div class="col-sm-12">
+            <h3 style="text-align:center;color:darkblue">{{len .XDWDocuments}} {{.Status}} {{.GetMappedId $pw}}{{$nhsid}} Workflows</h3>
+        </div>
+    </div>
+    {{range .XDWDocuments}}
+    <div class="row">
+        <div class="col-sm-1">
+            <label style="color:darkblue" for="nhsid">NHS ID</label>
+            <p id="nhsid" name="nhsid">{{.NHSId}}</p>
+        </div>
+       <div class="col-sm-2">
+            <label style="color:darkblue" for="pwy">Pathway</label>
+            <p id="pwy" name="pwy">{{$event.GetMappedId .Pathway}}</p>
+        </div>
+         <div class="col-sm-2">
+            <label style="color:darkblue" for="created">Opened</label>
+            <p id="created" name="created">{{$event.PrettyTime .Created}}</p>
+        </div>
+        <div class="col-sm-2">
+            <label style="color:darkblue" for="xdwkey">XDW Key</label>
+            <p id="xdwkey" name="xdwkey">{{.XDW_Key}}</p>
+        </div>
+        <div class="col-sm-1">
+            <label style="color:darkblue" for="status">Status</label>
+            <p id="status" name="status">{{.Status}}</p>
+        </div>
+        <div class="col-sm-1">
+            <label style="color:darkblue" for="published">Published</label>
+            <p id="published" name="published">{{.Published}}</p>
+        </div>
+        <div class="col-sm-1">
+            <label style="color:darkblue" for="version">Version</label>
+            <a href="{{$url}}?act=widget&task=xdw&pathway={{.Pathway}}&nhs={{.NHSId}}&vers={{.Version}}&user={{$usr}}&org={{$org}}&role={{$role}}" target="workflowItem"><p id="version" name="version">{{.Version}}</p></a>
+        </div>
+    </div>
+    {{template "horizontalline"}}
+    {{end}}
+</div>    
+</tbody>
+{{ template "footer"}} 
+{{end}}
