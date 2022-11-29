@@ -66,7 +66,7 @@ func main() {
 		}
 		tukdbint.DBConn.Close()
 		tukint.LogFile.Close()
-		log.Printf("Closed DB Connection\nCreated %s Database. TUK Event Manager should be good to 'go run main/main.go' !", os.Getenv(tukcnst.ENV_DB_NAME))
+		log.Printf("Closed DB Connection\nCreated %s Database. TUK Event Manager should be good to 'go' run ./tuk' !", os.Getenv(tukcnst.ENV_DB_NAME))
 	} else {
 		initTukManager()
 	}
@@ -123,7 +123,6 @@ func loadEnvVars(file string) {
 	if os.Getenv(tukcnst.ENV_DB_PORT) == "" {
 		os.Setenv(tukcnst.ENV_DB_PORT, envs.DB_Port)
 	}
-	log.Printf("Set DB Port %s", os.Getenv(tukcnst.ENV_DB_PORT))
 	if os.Getenv(tukcnst.ENV_DB_NAME) == "" {
 		os.Setenv(tukcnst.ENV_DB_NAME, envs.DB_NAME)
 	}
