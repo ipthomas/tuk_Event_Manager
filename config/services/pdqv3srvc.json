@@ -7,5 +7,6 @@
     "url": "SpiritPIX/PDQSupplier",
     "cachetimeout": 720,
     "cacheenabled": false,
-    "contexttimeout": 5000
+    "contexttimeout": 5000,
+    "debugmode": true
 }

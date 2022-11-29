@@ -149,6 +149,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -957,6 +958,7 @@ type PDQInterface interface {
 
 var (
 	pat_cache = make(map[string][]byte)
+	DebugMode = false
 )
 
 func New_Transaction(i PDQInterface) error {
@@ -1005,7 +1007,7 @@ func (i *PDQQuery) setPDQ_ID() error {
 func (i *PDQQuery) setPatient() error {
 	if i.Cache && i.Server_Mode != tukcnst.PDQ_SERVER_TYPE_CGL {
 		if _, ok := pat_cache[i.Used_PID]; ok {
-			log.Printf("Cache entry found for Patient ID %s", i.Used_PID)
+			l(fmt.Sprintf("Cache entry found for Patient ID %s", i.Used_PID), true)
 			i.StatusCode = http.StatusOK
 			i.Response = pat_cache[i.Used_PID]
 			return nil
@@ -1118,7 +1120,7 @@ func (i *PDQQuery) setPatient() error {
 				err = errors.New(string(i.Response))
 			} else {
 				if err := json.Unmarshal(i.Response, &i.PIXmResponse); err == nil {
-					log.Printf("%v Patient Entries in Response", i.PIXmResponse.Total)
+					l(fmt.Sprintf("%v Patient Entries in Response", i.PIXmResponse.Total), true)
 					i.Count = i.PIXmResponse.Total
 					if i.Count > 0 {
 						for cnt := 0; cnt < len(i.PIXmResponse.Entry); cnt++ {
@@ -1126,16 +1128,16 @@ func (i *PDQQuery) setPatient() error {
 							for _, id := range rsppat.Resource.Identifier {
 								if id.System == tukcnst.URN_OID_PREFIX+i.REG_OID {
 									i.REG_ID = id.Value
-									log.Printf("Set Reg ID %s %s", i.REG_ID, i.REG_OID)
+									l(fmt.Sprintf("Set Reg ID %s %s", i.REG_ID, i.REG_OID), true)
 								}
 								if id.Use == "usual" {
 									i.MRN_ID = id.Value
 									i.MRN_OID = strings.Split(id.System, ":")[2]
-									log.Printf("Set PID %s %s", i.MRN_ID, i.MRN_OID)
+									l(fmt.Sprintf("Set PID %s %s", i.MRN_ID, i.MRN_OID), true)
 								}
 								if id.System == tukcnst.URN_OID_PREFIX+i.NHS_OID {
 									i.NHS_ID = id.Value
-									log.Printf("Set NHS ID %s %s", i.NHS_ID, i.NHS_OID)
+									l(fmt.Sprintf("Set NHS ID %s %s", i.NHS_ID, i.NHS_OID), true)
 								}
 							}
 							gn := ""
@@ -1170,7 +1172,7 @@ func (i *PDQQuery) setPatient() error {
 		}
 	}
 	if err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 	}
 	return err
 }
@@ -1185,4 +1187,13 @@ func (i *PDQQuery) newIHESOAPRequest(soapaction string) error {
 	i.Response = httpReq.Response
 	i.StatusCode = httpReq.StatusCode
 	return err
+}
+func l(msg string, debug bool) {
+	if !debug {
+		log.Println(msg)
+	} else {
+		if DebugMode {
+			log.Println(msg)
+		}
+	}
 }

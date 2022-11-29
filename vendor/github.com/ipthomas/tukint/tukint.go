@@ -22,6 +22,7 @@ import (
 	"github.com/ipthomas/tukcnst"
 	"github.com/ipthomas/tukdbint"
 	"github.com/ipthomas/tukdsub"
+	"github.com/ipthomas/tukhttp"
 	"github.com/ipthomas/tukpdq"
 	"github.com/ipthomas/tukutil"
 	"github.com/ipthomas/tukxdw"
@@ -170,26 +171,29 @@ var (
 	LogFile    *os.File
 	Regoid     = ""
 	Services   = EventServices{}
+	DebugMode  = true
 )
 
 func init() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Lmicroseconds | log.Lshortfile)
 	Basepath = os.Getenv(tukcnst.ENV_TUK_CONFIG)
 	configFile = os.Getenv(tukcnst.ENV_TUK_CONFIG_FILE)
 	if Basepath == "" {
 		Basepath = tukcnst.DEFAULT_TUK_BASEPATH
-		log.Println("Environment Var 'TUK_CONFIG' not set")
+		l("Environment Var 'TUK_CONFIG' not set", false)
 	} else {
 		if !strings.HasSuffix(Basepath, "/") {
 			Basepath = Basepath + "/"
 		}
 	}
-	log.Printf("Set BasePath = %s", Basepath)
+	l(fmt.Sprintf("Set BasePath = %s", Basepath), false)
 	if configFile == "" {
 		configFile = tukcnst.DEFAULT_TUK_SERVICE_CONFIG_FILE
+		l("Environment Var 'TUK_CONFIG_FILE' not set", false)
 	} else {
 		configFile = strings.TrimSuffix(configFile, ".json")
 	}
-	log.Printf("Environment Var 'TUK_CONFIG_FILE' not set. configFile set to %s", configFile)
+	l(fmt.Sprintf("Set Config file = %s", configFile), false)
 }
 func InitTuki() {
 	var err error
@@ -201,34 +205,44 @@ func InitTuki() {
 		err = cacheTemplates()
 	}
 	if err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		tukdbint.DBConn.Close()
 		LogFile.Close()
 		os.Exit(1)
 	}
+	setLogLevel()
 	Regoid = os.Getenv(tukcnst.ENV_REG_OID)
 	if Regoid == "" {
-		log.Printf("No Regional OID set in Environment Var %s. Checking for Event Service IDMapping", tukcnst.ENV_REG_OID)
+		l(fmt.Sprintf("No Regional OID set in Environment Var %s. Checking for Event Service IDMapping", tukcnst.ENV_REG_OID), false)
 		Regoid = tukdbint.GetIDMapsLocalId(tukcnst.XDSDOMAIN)
 		log.Printf("IDMap Query returned %s", Regoid)
 		if Regoid != tukcnst.XDSDOMAIN {
-			log.Printf("Set Regional OID %s from Event Service Code System", Regoid)
+			l(fmt.Sprintf("Set Regional OID %s from Event Service Code System", Regoid), false)
 		} else {
-			log.Println("Warning. Unabable to obtain Regional OID")
+			l("Warning. Unabable to obtain Regional OID", false)
 		}
 	} else {
-		log.Printf("Set Regional OID %s from Environment Var %s", Regoid, tukcnst.ENV_REG_OID)
+		l(fmt.Sprintf("Set Regional OID %s from Environment Var %s", Regoid, tukcnst.ENV_REG_OID), false)
 	}
 }
+
+func setLogLevel() {
+	DebugMode = Services.EventService.Debugmode
+	tukutil.DebugMode = DebugMode
+	tukhttp.DebugMode = DebugMode
+	tukdbint.DebugMode = DebugMode
+	tukpdq.DebugMode = DebugMode
+	tukxdw.DebugMode = DebugMode
+}
 func SetEventServiceState() error {
-	log.Println("Initialising Service States")
+	l("Initialising Service States", true)
 	Services.ServiceConfigs = nil
 	err := Services.SetEventServicesStates()
 	hn, _ := os.Hostname()
 	if hn != Services.EventService.Host {
-		log.Printf("Warning: Configured Event Service Host Name %s is different to the OS Host Name %s. To be on safe side set the eventsrvc.json host value to equal the actual host name!", Services.EventService.Host, hn)
+		l(fmt.Sprintf("Warning: Configured Event Service Host Name %s is different to the OS Host Name %s. To be on safe side set the eventsrvc.json host value to equal the actual host name!", Services.EventService.Host, hn), true)
 	} else {
-		log.Printf("Configured Event Service Host Name %s is equal to the OS Host Name %s. So thats all good then!", Services.EventService.Host, hn)
+		l(fmt.Sprintf("Configured Event Service Host Name %s is equal to the OS Host Name %s. So thats all good then!", Services.EventService.Host, hn), true)
 	}
 	return err
 }
@@ -238,7 +252,7 @@ func cacheTemplates() error {
 	Services.HTMLTemplates = template.New(tukcnst.HTML)
 	tmplts := tukdbint.Templates{Action: tukcnst.SELECT}
 	tukdbint.NewDBEvent(&tmplts)
-	log.Printf("loaded %v Templates", tmplts.Count)
+	l(fmt.Sprintf("loaded %v Templates", tmplts.Count), true)
 	funcmap := getTemplateFuncMap()
 	for _, tmplt := range tmplts.Templates {
 		if tmplt.IsXML {
@@ -295,25 +309,27 @@ func (i *EventServices) SetEventServicesStates() error {
 	i.WorkflowDefinitions = tukxdw.GetWorkflowDefinitionNames()
 	i.WorkflowXDWMeta = tukxdw.GetWorkflowXDSMetaNames()
 	i.ActivePathways = tukxdw.GetActiveWorkflowNames()
-	log.Printf("Initialised %v Event Services", len(i.ServiceConfigs))
+	l(fmt.Sprintf("Initialised %v Event Services", len(i.ServiceConfigs)), true)
 	return err
 }
 func (i *EventServices) loadServiceConfig(srvc string) error {
 	var err error
 	var tuksrvcState = tukdbint.ServiceState{}
 	srvc = strings.TrimSuffix(srvc, ".json")
-	log.Printf("Loading Service Configuration %s", srvc)
+	l(fmt.Sprintf("Loading Service Configuration %s", srvc), false)
 	if tuksrvcState, err = tukdbint.GetServiceState(srvc); err == nil {
 		srvcState := ServiceState{}
 		if err := json.Unmarshal([]byte(tuksrvcState.Service), &srvcState); err != nil {
 			log.Println(err.Error())
-			log.Println("Unable to load Event Service Configuration")
+			l("Unable to load Event Service Configuration", false)
 			return err
 		}
 		switch srvc {
 		case configFile:
 			i.EventService = srvcState
 			i.EventService.setServiceWSE()
+			DebugMode = i.EventService.Debugmode
+			setLogLevel()
 			i.ServiceConfigs = append(i.ServiceConfigs, i.EventService.Id)
 		case i.EventService.BrokerSrvc:
 			i.BrokerService = srvcState
@@ -336,32 +352,38 @@ func (i *EventServices) loadServiceConfig(srvc string) error {
 			i.XDSRepService.setServiceWSE()
 			i.ServiceConfigs = append(i.ServiceConfigs, i.XDSRepService.Id)
 		}
-		log.Println("Initialised " + srvcState.Desc + " State")
+		l("Initialised "+srvcState.Desc+" State", false)
 	}
 	return err
 }
-func (i *EventServices) HandleBrokerNotification(body string) []byte {
-	log.Println("Event is IHE DSUB Notification Message")
-	dsubevent := tukdsub.DSUBEvent{
-		BrokerURL:       i.BrokerService.WSE,
-		PDQ_SERVER_TYPE: i.EventService.PatientSrvc,
+
+func (i *TukEvent) HandleBrokerNotification() []byte {
+	l("Handling IHE DSUB Notification Message", false)
+	event := tukdsub.DSUBEvent{
+		BrokerURL:       i.EventServices.BrokerService.WSE,
+		PDQ_SERVER_TYPE: i.EventServices.EventService.PatientSrvc,
 		REG_OID:         Regoid,
-		EventMessage:    body,
+		EventMessage:    i.Body,
 	}
-	switch dsubevent.PDQ_SERVER_TYPE {
+	switch event.PDQ_SERVER_TYPE {
 	case tukcnst.PDQ_SERVER_TYPE_IHE_PDQV3:
-		dsubevent.PDQ_SERVER_URL = i.PDQv3Service.WSE
+		event.PDQ_SERVER_URL = i.EventServices.PDQv3Service.WSE
 	case tukcnst.PDQ_SERVER_TYPE_IHE_PIXM:
-		dsubevent.PDQ_SERVER_URL = i.PIXmService.WSE
+		event.PDQ_SERVER_URL = i.EventServices.PIXmService.WSE
 	}
-	if err := tukdsub.New_Transaction(&dsubevent); err != nil {
-		log.Println(err.Error())
+	if err := tukdsub.New_Transaction(&event); err != nil {
+		l(err.Error(), false)
 	}
+	l("Sending Notification Message ACK to Broker", false)
 	return []byte(tukcnst.GO_TEMPLATE_DSUB_ACK)
 }
 func (i *ServiceState) setServiceWSE() {
-	i.WSE = i.Scheme + "://" + i.Host + ":" + tukutil.GetStringFromInt(i.Port) + "/" + i.Url
-	log.Printf("Set %s Event Service WSE %s", i.Desc, i.WSE)
+	if i.Id == os.Getenv(tukcnst.ENV_TUK_CONFIG_FILE) {
+		i.WSE = i.Scheme + "://" + i.Host + ":" + tukutil.GetStringFromInt(i.Port) + "/" + i.BaseURLPath + "/" + i.EventUrl
+	} else {
+		i.WSE = i.Scheme + "://" + i.Host + ":" + tukutil.GetStringFromInt(i.Port) + "/" + i.Url
+	}
+	l(fmt.Sprintf("Set %s Event Service WSE %s", i.Desc, i.WSE), false)
 }
 func loadFile(file fs.DirEntry, folder string) []byte {
 	var fileBytes []byte
@@ -370,12 +392,12 @@ func loadFile(file fs.DirEntry, folder string) []byte {
 	if err != nil {
 		log.Println(err.Error())
 	} else {
-		log.Printf("Loaded %s ", file.Name())
+		l(fmt.Sprintf("Loaded %s ", file.Name()), true)
 	}
 	return fileBytes
 }
 func InitDatabase(mysqlFile string) {
-	log.Println("Initialising Event Management Service Database")
+	l("Initialising Event Management Service Database", true)
 	tukdbint.DBConn.Close()
 	dbconn := tukdbint.TukDBConnection{DBUser: os.Getenv(tukcnst.ENV_DB_USER), DBPassword: os.Getenv(tukcnst.ENV_DB_PASSWORD), DBHost: os.Getenv(tukcnst.ENV_DB_HOST), DBPort: os.Getenv(tukcnst.ENV_DB_PORT), DBName: os.Getenv(tukcnst.ENV_DB_NAME)}
 	if err := dbconn.InitialiseDatabase(Basepath + mysqlFile); err != nil {
@@ -384,7 +406,7 @@ func InitDatabase(mysqlFile string) {
 	}
 }
 func PersistServiceConfigs() {
-	log.Println("Processing Event Service Config Files")
+	l("Processing Event Service Config Files", true)
 	if srvcs, err := tukutil.GetFolderFiles(Basepath + "services/"); err == nil {
 		for _, file := range srvcs {
 			if strings.HasSuffix(file.Name(), ".json") {
@@ -441,12 +463,12 @@ func PersistTemplates() {
 	}
 }
 func PersistXDWConfigs() {
-	log.Println("Processing XDW Config Files")
+	l("Processing XDW Config Files", true)
 	if xdwconfigs, err := tukutil.GetFolderFiles(Basepath + "xdwconfig/"); err == nil {
 		for _, file := range xdwconfigs {
 			splitname := strings.Split(file.Name(), ".")
 			if len(splitname) < 2 {
-				log.Printf("File %s is not a XDW Configuration File", file.Name())
+				l(fmt.Sprintf("File %s is not a XDW Configuration File", file.Name()), false)
 				continue
 			}
 			suffix := strings.Split(file.Name(), ".")[1]
@@ -463,7 +485,7 @@ func PersistXDWConfigs() {
 				}
 				tukxdw.Execute(&trans)
 			} else {
-				log.Printf("Unable to load file %s", file.Name())
+				l(fmt.Sprintf("Unable to load file %s", file.Name()), false)
 			}
 		}
 	}
@@ -485,7 +507,7 @@ func (i *TukEvent) ElapsedTime() string {
 	duration := time.Since(st)
 	log.Printf("Duration = %s", duration.String())
 	elapsedTime := tukutil.PrettyPrintDuration(duration)
-	log.Printf("Elapsed time for workflow %s nhs id %s version %v is %s", i.XDWWorkflowDocument.WorkflowDefinitionReference, i.XDWWorkflowDocument.Patient.ID.Extension, i.Vers, elapsedTime)
+	l(fmt.Sprintf("Elapsed time for workflow %s nhs id %s version %v is %s", i.XDWWorkflowDocument.WorkflowDefinitionReference, i.XDWWorkflowDocument.Patient.ID.Extension, i.Vers, elapsedTime), true)
 	return elapsedTime
 }
 func (i *TukEvent) LastUpdateTime() string {
@@ -495,12 +517,12 @@ func (i *TukEvent) lastUpdateTime() time.Time {
 	return i.XDWWorkflowDocument.GetLatestWorkflowEventTime()
 }
 func (i *TukEvent) TaskCompleteByTimeString(taskid string) string {
-	log.Printf("Obtaining Workflow Task %s Complete By date", taskid)
+	l(fmt.Sprintf("Obtaining Workflow Task %s Complete By date", taskid), true)
 	trans := tukxdw.Transaction{XDWDocument: i.XDWWorkflowDocument, XDWDefinition: i.WorkflowDefinition, Task_ID: tukutil.GetIntFromString(taskid)}
 	return i.PrettyTime(trans.GetTaskCompleteByDate().String())
 }
 func (i *TukEvent) TaskDuration(taskid string) string {
-	log.Printf("Obtaining task %s duration", taskid)
+	l(fmt.Sprintf("Obtaining task %s duration", taskid), true)
 	trans := tukxdw.Transaction{XDWDefinition: i.WorkflowDefinition, XDWDocument: i.XDWWorkflowDocument, Task_ID: tukutil.GetIntFromString(taskid)}
 	return trans.GetTaskDuration()
 }
@@ -509,7 +531,7 @@ func (i *TukEvent) IsTaskOverdue(taskid string) bool {
 	return trans.IsTaskOverdue()
 }
 func (i *TukEvent) getWorkflowCompleteByDate() time.Time {
-	log.Println("Obtaining Workflow Complete By Date")
+	l("Obtaining Workflow Complete By Date", true)
 	trans := tukxdw.Transaction{XDWDocument: i.XDWWorkflowDocument, XDWDefinition: i.WorkflowDefinition}
 	return trans.GetWorkflowCompleteByDate()
 }
@@ -536,7 +558,7 @@ func (i *TukEvent) IsWorkflowOverdue() bool {
 	return true
 }
 func (i *TukEvent) WorkflowTimeRemaining() string {
-	log.Printf("Obtaining time remaining for %s Workflow NHS ID %s", i.Pathway, i.NHSId)
+	l(fmt.Sprintf("Obtaining time remaining for %s Workflow NHS ID %s", i.Pathway, i.NHSId), true)
 	trans := tukxdw.Transaction{XDWDocument: i.XDWWorkflowDocument, XDWDefinition: i.WorkflowDefinition}
 	return trans.GetWorkflowTimeRemaining()
 }
@@ -546,28 +568,28 @@ func (i *TukEvent) parsePostEvent() []byte {
 	i.HttpResponse.Header().Add(tukcnst.CONTENT_TYPE, tukcnst.APPLICATION_XML)
 	b, _ := io.ReadAll(i.HttpRequest.Body)
 	i.Body = string(b)
-	return i.EventServices.HandleBrokerNotification(i.Body)
+	return i.HandleBrokerNotification()
 }
 func (i *TukEvent) newXDWHandler() []byte {
 	wfs := tukxdw.GetWorkflows(i.Pathway, i.NHSId, "", i.DocRef, i.Vers, false, i.Status)
 	if wfs.Count == 1 {
 		if err := xml.Unmarshal([]byte(wfs.Workflows[1].XDW_Doc), &i.XDWWorkflowDocument); err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 			return nil
 		}
-		log.Println("Unmarshalled Workflow Document")
+		l("Unmarshalled Workflow Document", true)
 		if err := json.Unmarshal([]byte(wfs.Workflows[1].XDW_Def), &i.WorkflowDefinition); err != nil {
 			log.Println(err.Error())
 			return nil
 		}
-		log.Println("Unmarshalled Workflow Definition")
+		l("Unmarshalled Workflow Definition", true)
 	}
 
 	if i.ReturnJSON {
 		i.HttpResponse.Header().Add(tukcnst.CONTENT_TYPE, tukcnst.TEXT_PLAIN)
 		b, e := json.MarshalIndent(i.XDWWorkflowDocument, "", "  ")
 		if e != nil {
-			log.Println(e.Error())
+			l(e.Error(), false)
 			return []byte(e.Error())
 		}
 		return b
@@ -576,7 +598,7 @@ func (i *TukEvent) newXDWHandler() []byte {
 		i.HttpResponse.Header().Add(tukcnst.CONTENT_TYPE, tukcnst.TEXT_PLAIN)
 		b, err := xml.MarshalIndent(i.XDWWorkflowDocument, "", "  ")
 		if err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 			return []byte(err.Error())
 		}
 		return b
@@ -596,9 +618,11 @@ func (i *TukEvent) newXDWSHandler() []byte {
 	case tukcnst.TUK_STATUS_ESCALATED:
 		status = tukcnst.TUK_STATUS_OPEN
 	}
-	log.Printf("Retrieving XDWS with Status %s", status)
+	if status != "" {
+		l(fmt.Sprintf("Retrieving XDWS with Status %s", status), true)
+	}
 	wfs := tukdbint.GetWorkflows(i.Pathway, i.NHSId, "", i.DocRef, i.Vers, false, status)
-	log.Printf("Total Workflow Count %v", wfs.Count)
+	l(fmt.Sprintf("Total Workflow Count %v", wfs.Count), true)
 	trans := tukxdw.Transaction{Workflows: wfs}
 	trans.SetDashboardState()
 	retwfs := trans.Workflows
@@ -623,6 +647,7 @@ func (i *TukEvent) newXDWSHandler() []byte {
 		b, e := json.MarshalIndent(i.XDWDocuments, "", "  ")
 		if e != nil {
 			log.Println(e.Error())
+			l(e.Error(), false)
 			return []byte(e.Error())
 		}
 		return b
@@ -631,7 +656,7 @@ func (i *TukEvent) newXDWSHandler() []byte {
 		i.HttpResponse.Header().Add(tukcnst.CONTENT_TYPE, tukcnst.TEXT_PLAIN)
 		b, err := xml.MarshalIndent(i.XDWDocuments, "", "  ")
 		if err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 			return []byte(err.Error())
 		}
 		return b
@@ -694,12 +719,12 @@ func (i *TukEvent) createUserEvent() []byte {
 	evs.Events = append(evs.Events, i.DBEvent)
 	err := tukdbint.NewDBEvent(&evs)
 	if err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 	} else {
 		log.Printf("Persisted User Generated Event id %v for task %v pathway %s nhs id %v version %v", evs.LastInsertId, i.DBEvent.TaskId, i.DBEvent.Pathway, i.DBEvent.NhsId, i.Vers)
 	}
 	if err := tukxdw.ContentUpdater(i.Pathway, i.Vers, i.NHSId, i.EventServices.EventService.User); err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 	}
 	i.Act = tukcnst.WIDGET
 	i.Task = tukcnst.XDW
@@ -707,7 +732,7 @@ func (i *TukEvent) createUserEvent() []byte {
 }
 func (i *TukEvent) handleRequest() []byte {
 	if i.HTTPMethod == http.MethodPost {
-		log.Printf("Processing POST Request from %s", i.HttpRequest.RemoteAddr)
+		l(fmt.Sprintf("Processing POST Request from %s", i.HttpRequest.RemoteAddr), true)
 		defer i.HttpRequest.Body.Close()
 		return i.parsePostEvent()
 	}
@@ -740,7 +765,7 @@ func (i *TukEvent) xdwContentCreator() []byte {
 		Role:    i.EventServices.EventService.Role,
 	}
 	if err := tukxdw.Execute(&trans); err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 	}
 	if bytes, err := xml.MarshalIndent(trans.XDWDocument, "", "  "); err == nil {
 		i.ConfigStr = string(bytes)
@@ -770,14 +795,14 @@ func (i *TukEvent) manageServices() []byte {
 		return i.ConfigWidget()
 	case tukcnst.TUK_TASK_SET:
 		if err = tukdbint.SetServiceState(i.Op, i.ConfigStr); err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.Task = tukcnst.TUK_TASK_GET
 		return i.manageServices()
 	case tukcnst.TUK_TASK_GET_META:
 		xdw, err = tukdbint.GetWorkflowXDSMeta(i.Op)
 		if err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.ConfigStr = xdw.XDW
 		if i.ReturnJSON {
@@ -786,14 +811,14 @@ func (i *TukEvent) manageServices() []byte {
 		return i.ConfigWidget()
 	case tukcnst.TUK_TASK_SET_META:
 		if err = tukdbint.SetWorkflowDefinition(i.Op, i.ConfigStr, true); err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.Task = tukcnst.TUK_TASK_GET_META
 		return i.manageServices()
 	case tukcnst.TUK_TASK_GET_XDW:
 		xdw, err = tukdbint.GetWorkflowDefinition(i.Op)
 		if err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.ConfigStr = xdw.XDW
 		if i.ReturnJSON {
@@ -802,33 +827,33 @@ func (i *TukEvent) manageServices() []byte {
 		return i.ConfigWidget()
 	case tukcnst.TUK_TASK_SET_XDW:
 		if err = tukdbint.SetWorkflowDefinition(i.Op, i.ConfigStr, false); err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.Task = tukcnst.TUK_TASK_GET_XDW
 		return i.manageServices()
 	case tukcnst.TUK_TASK_GET_HTML:
 		tmplt, err = tukdbint.GetTemplate(i.Op, false)
 		if err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.ConfigStr = tmplt.Template
 		return i.ConfigWidget()
 	case tukcnst.TUK_TASK_SET_HTML:
 		if err := tukdbint.SetTemplate(i.Op, false, i.ConfigStr); err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.Task = tukcnst.TUK_TASK_GET_HTML
 		return i.manageServices()
 	case tukcnst.TUK_TASK_GET_XML:
 		tmplt, err = tukdbint.GetTemplate(i.Op, true)
 		if err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.ConfigStr = tmplt.Template
 		return i.ConfigWidget()
 	case tukcnst.TUK_TASK_SET_XML:
 		if err := tukdbint.SetTemplate(i.Op, true, i.ConfigStr); err != nil {
-			log.Println(err.Error())
+			l(err.Error(), false)
 		}
 		i.Task = tukcnst.TUK_TASK_GET_XML
 		return i.manageServices()
@@ -861,12 +886,12 @@ func (i *TukEvent) setPatientInfo() error {
 		switch i.EventServices.EventService.PatientSrvc {
 		case tukcnst.PDQ_SERVER_TYPE_IHE_PIXM:
 			if err := json.Unmarshal(pdq.Response, &i.PIXmResponse); err != nil {
-				log.Println(err.Error())
+				l(err.Error(), false)
 				return err
 			}
 		case tukcnst.PDQ_SERVER_TYPE_IHE_PDQV3:
 			if err := xml.Unmarshal(pdq.Response, &i.PDQv3Response); err != nil {
-				log.Println(err.Error())
+				l(err.Error(), false)
 				return err
 			}
 		}
@@ -918,20 +943,19 @@ func (e xmlmsgs) Swap(i, j int) {
 // Server
 
 func TukEventServer() {
-	isSecure := Services.EventService.Scheme == "https"
-	log.Printf("Event Service set to HTTPS : %v", isSecure)
-	http.HandleFunc("/"+Services.EventService.BaseURLPath+"/"+Services.EventService.EventUrl, tukutil.WriteResponseHeaders(parseHTTPRequest, isSecure))
-	http.HandleFunc("/upload", uploadFile)
-	http.Handle("/"+Services.EventService.FilesUrl, http.StripPrefix("/"+Services.EventService.FilesUrl, http.FileServer(http.Dir(Basepath+"/"+Services.EventService.FilesPath))))
-	http.Handle("/eventservice/", http.StripPrefix("/eventservice/"+Services.EventService.FilesUrl, http.FileServer(http.Dir(Basepath+"/"+Services.EventService.FilesPath))))
-	log.Println("Inialised Event Management Handler - " + Services.EventService.Scheme + "://" + Services.EventService.Host + ":" + strconv.Itoa(Services.EventService.Port) + "/" + Services.EventService.BaseURLPath + "/" + Services.EventService.EventUrl)
 	debugMode := Services.EventService.Debugmode
-	log.Printf("Event Service set to Debug Mode : %v", debugMode)
+	l(fmt.Sprintf("Event Service set to Debug Mode : %v", debugMode), false)
 	demoMode := Services.EventService.DemoMode
-	log.Printf("Event Service set to Demo Mode : %v", demoMode)
+	l(fmt.Sprintf("Event Service set to Demo Mode : %v", demoMode), false)
+	isSecure := Services.EventService.Scheme == "https"
+	l(fmt.Sprintf("Event Service set to Secure Mode : %v", isSecure), false)
+	http.HandleFunc("/"+Services.EventService.BaseURLPath+"/"+Services.EventService.EventUrl, tukutil.WriteResponseHeaders(Handle_TUK_HTTP_Request, isSecure))
+	http.Handle("/"+Services.EventService.FilesUrl, http.StripPrefix("/"+Services.EventService.FilesUrl, http.FileServer(http.Dir(Basepath+"/"+Services.EventService.FilesPath))))
+	http.Handle(Services.EventService.BaseURLPath, http.StripPrefix(Services.EventService.BaseURLPath+Services.EventService.FilesUrl, http.FileServer(http.Dir(Basepath+"/"+Services.EventService.FilesPath))))
+	l("Inialised Event Management Handler - "+Services.EventService.WSE, false)
 
 	monitorApp()
-	log.Println("Initialised Application Monitor")
+	l("Initialised Application Monitor", false)
 	startUpMessage()
 	if isSecure {
 		log.Fatal(http.ListenAndServeTLS(":"+strconv.Itoa(Services.EventService.Port), Basepath+"/"+Services.EventService.CertPath+"/"+Services.EventService.Certs, Basepath+"/"+Services.EventService.CertPath+"/"+Services.EventService.Keys, nil))
@@ -940,14 +964,9 @@ func TukEventServer() {
 	}
 }
 func startUpMessage() {
-	log.Println("Starting " + Services.EventService.Desc)
-	fmt.Println("")
-	fmt.Println("")
-	fmt.Println("***")
-	fmt.Println("Tiani Spirit UK Event Services Server")
-	fmt.Println("Listening for Events on " + Services.EventService.Scheme + "://" + Services.EventService.Host + ":" + strconv.Itoa(Services.EventService.Port) + "/" + Services.EventService.BaseURLPath + "/" + Services.EventService.EventUrl)
-	fmt.Println("***")
-	log.Println("Listening for Events on " + Services.EventService.Scheme + "://" + Services.EventService.Host + ":" + strconv.Itoa(Services.EventService.Port) + "/" + Services.EventService.BaseURLPath + "/" + Services.EventService.EventUrl)
+	l("Starting "+Services.EventService.Desc, false)
+	l("Listening for DSUB Notifications on "+Services.EventService.WSE, false)
+	l("Testing Event Manager Home Page. "+Services.EventService.WSE+"?act=widget&task=spa&user=test&org=spirit&role=admin", false)
 }
 func monitorApp() {
 	ch := make(chan os.Signal, 1)
@@ -955,16 +974,17 @@ func monitorApp() {
 	go func() {
 		signalType := <-ch
 		signal.Stop(ch)
-		fmt.Println("")
-		fmt.Println("***")
-		fmt.Println("Exit command received. Exiting...")
+		l("", false)
+		l("*********************************", false)
+		l("Exit command received. Exiting...", false)
 		switch signalType {
 		case os.Interrupt:
-			log.Println("FATAL: CTRL+C pressed")
+			l("FATAL: CTRL+C pressed", false)
 		case syscall.SIGTERM:
-			log.Println("FATAL: SIGTERM detected")
+			l("FATAL: SIGTERM detected", false)
 		}
 		tukdbint.DBConn.Close()
+		l("Closed DB connection", false)
 		LogFile.Close()
 		os.Exit(1)
 	}()
@@ -995,9 +1015,9 @@ func Handle_AWS_API_GW_Request(ctx context.Context, request events.APIGatewayPro
 	i.Body = request.Body
 	i.Audience = "N"
 	i.ReturnCode = 200
-	fmt.Printf("Processing request data for request %s.\n", request.RequestContext.RequestID)
-	fmt.Printf("Body size = %d.\n", len(request.Body))
-	fmt.Println("Headers:")
+	l(fmt.Sprintf("Processing request data for request %s.\n", request.RequestContext.RequestID), true)
+	l(fmt.Sprintf("Body size = %d.\n", len(request.Body)), true)
+	l("Headers:\n", true)
 	for key, value := range request.Headers {
 		fmt.Printf("    %s: %s\n", key, value)
 		if key == tukcnst.ACCEPT && value == tukcnst.APPLICATION_JSON {
@@ -1017,13 +1037,20 @@ func Handle_AWS_API_GW_Request(ctx context.Context, request events.APIGatewayPro
 			}
 		}
 	}
-
-	fmt.Println("Query Parameters:")
+	l("AWS API Query Parameters\n", true)
 	for key, value := range request.QueryStringParameters {
-		fmt.Printf("    %s: %s\n", key, value)
+		l(fmt.Sprintf("    %s: %s\n", key, value), true)
 		switch key {
 		case tukcnst.TUK_EVENT_QUERY_PARAM_SAML:
 			i.SAML = value
+		case tukcnst.TUK_EVENT_QUERY_PARAM_ACT:
+			i.Act = value
+		case tukcnst.TUK_EVENT_QUERY_PARAM_TASK:
+			i.Task = value
+		case tukcnst.TUK_EVENT_QUERY_PARAM_OP:
+			i.Op = value
+		case tukcnst.TUK_EVENT_QUERY_PARAM_STATUS:
+			i.Status = value
 		case tukcnst.TUK_EVENT_QUERY_PARAM_ID:
 			if value != "" {
 				_, err := strconv.ParseInt(value, 0, 0)
@@ -1033,20 +1060,18 @@ func Handle_AWS_API_GW_Request(ctx context.Context, request events.APIGatewayPro
 					i.RowId = int64(tukutil.GetIntFromString(value))
 				}
 			}
-		case tukcnst.TUK_EVENT_QUERY_PARAM_ACT:
-			i.Act = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_TASK:
-			i.Task = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_OP:
-			i.Op = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_STATUS:
-			i.Status = value
 		case tukcnst.TUK_EVENT_QUERY_PARAM_TASK_ID:
-			i.TaskID = tukutil.GetIntFromString(value)
+			if value == "" {
+				i.TaskID = -1
+			} else {
+				i.TaskID = tukutil.GetIntFromString(value)
+			}
 		case tukcnst.TUK_EVENT_QUERY_PARAM_VERSION:
-			i.Vers = tukutil.GetIntFromString(value)
-		case tukcnst.TUK_EVENT_QUERY_PARAM_PASSWORD:
-			i.EventServices.EventService.Password = value
+			if value == "" {
+				i.Vers = -1
+			} else {
+				i.Vers = tukutil.GetIntFromString(value)
+			}
 		case tukcnst.TUK_EVENT_QUERY_PARAM_ROLE:
 			i.EventServices.EventService.Role = value
 		case tukcnst.TUK_EVENT_QUERY_PARAM_USER:
@@ -1063,20 +1088,6 @@ func Handle_AWS_API_GW_Request(ctx context.Context, request events.APIGatewayPro
 			i.Notes = value
 		case tukcnst.TUK_EVENT_QUERY_PARAM_NHS:
 			i.NHSId = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_PID:
-			i.PID = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_PID_ORG:
-			i.PIDOrg = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_GIVEN_NAME:
-			i.GivenName = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_FAMILY_NAME:
-			i.FamilyName = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_DOB:
-			i.DOB = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_ZIP:
-			i.ZIP = value
-		case tukcnst.TUK_EVENT_QUERY_PARAM_GENDER:
-			i.Gender = value
 		case tukcnst.TUK_EVENT_QUERY_PARAM_AUDIEANCE:
 			i.Audience = value
 		case tukcnst.TUK_EVENT_QUERY_PARAM_CONFIG:
@@ -1092,7 +1103,6 @@ func Handle_AWS_API_GW_Request(ctx context.Context, request events.APIGatewayPro
 			}
 		}
 	}
-
 	tukrsp := i.handleRequest()
 	awsHeaders := make(map[string]string)
 	if i.ReturnJSON {
@@ -1101,100 +1111,64 @@ func Handle_AWS_API_GW_Request(ctx context.Context, request events.APIGatewayPro
 	if i.ReturnXML {
 		awsHeaders[tukcnst.CONTENT_TYPE] = tukcnst.APPLICATION_XML
 	}
-
 	return events.APIGatewayProxyResponse{
 		StatusCode: i.ReturnCode,
 		Headers:    i.setAwsResponseHeaders(),
 		Body:       string(tukrsp),
 	}, nil
 }
-func parseHTTPRequest(rsp http.ResponseWriter, r *http.Request) {
-	log.Printf("Received http %s request", r.Method)
-	i := TukEvent{
-		REGOid:        Regoid,
-		EventServices: Services,
-		HttpRequest:   r,
-		HttpResponse:  rsp,
+func Handle_TUK_HTTP_Request(rsp http.ResponseWriter, req *http.Request) {
+	l(fmt.Sprintf("Received http %s request from %s. Processing New Event", req.Method, req.RemoteAddr), false)
+	i := TukEvent{REGOid: Regoid, EventServices: Services, HttpRequest: req, HttpResponse: rsp}
+	req.ParseForm()
+	i.EventServices.EventService.User = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_USER)
+	i.EventServices.EventService.Org = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ORG)
+	i.EventServices.EventService.Role = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ROLE)
+	i.Act = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ACT)
+	i.Task = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_TASK)
+	i.Status = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_STATUS)
+	i.Op = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_OP)
+	i.NHSId = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_NHS)
+	i.Audience = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_AUDIEANCE)
+	i.Pathway = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_PATHWAY)
+	i.Topic = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_TOPIC)
+	i.Expression = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_EXPRESSION)
+	i.Notes = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_NOTES)
+	i.ConfigStr = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_CONFIG)
+	i.DocRef = req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_DOCREF)
+	if req.Header.Get(tukcnst.ACCEPT) == tukcnst.APPLICATION_JSON || req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_FORMAT) == tukcnst.JSON {
+		i.ReturnJSON = true
 	}
-	r.ParseForm()
-	if r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ID) != "" {
-		i.RowId = int64(tukutil.GetIntFromString(r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ID)))
+	if req.Header.Get(tukcnst.ACCEPT) == tukcnst.APPLICATION_XML || req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_FORMAT) == tukcnst.XML {
+		i.ReturnXML = true
 	}
-	if r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_VERSION) != "" {
-		i.Vers = tukutil.GetIntFromString(r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_VERSION))
-	}
-	if r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_TASK_ID) != "" {
-		i.TaskID = tukutil.GetIntFromString(r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_TASK_ID))
-	}
-	i.Act = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ACT)
-	i.EventServices.EventService.Password = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_PASSWORD)
-	i.EventServices.EventService.Role = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ROLE)
-	i.Task = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_TASK)
-	i.Status = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_STATUS)
-	i.Op = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_OP)
-	i.EventServices.EventService.User = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_USER)
-	i.EventServices.EventService.Org = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ORG)
-	i.NHSId = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_NHS)
-	i.PID = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_PID)
-	i.PIDOrg = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_PID_ORG)
-	i.FamilyName = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_FAMILY_NAME)
-	i.GivenName = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_GIVEN_NAME)
-	i.DOB = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_DOB)
-	i.Gender = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_GENDER)
-	i.ZIP = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ZIP)
-	i.Notes = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_NOTES)
-	i.Expression = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_EXPRESSION)
-	i.Topic = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_TOPIC)
-	i.Pathway = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_PATHWAY)
-	i.Audience = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_AUDIEANCE)
-	i.ConfigStr = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_CONFIG)
 	if i.Audience == "" {
 		i.Audience = "N"
 	}
-	i.DocRef = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_DOCREF)
-
-	i.ReturnXML = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_FORMAT) == tukcnst.XML
-	i.ReturnJSON = r.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_FORMAT) == tukcnst.JSON
-
-	if r.Header.Get(tukcnst.ACCEPT) == tukcnst.APPLICATION_JSON {
-		i.ReturnJSON = true
+	if req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ID) != "" {
+		i.RowId = int64(tukutil.GetIntFromString(req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_ID)))
+	} else {
+		i.RowId = 0
 	}
-	if r.Header.Get(tukcnst.ACCEPT) == tukcnst.APPLICATION_XML {
-		i.ReturnXML = true
+	if req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_VERSION) != "" {
+		i.Vers = tukutil.GetIntFromString(req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_VERSION))
+	} else {
+		i.Vers = -1
 	}
-
-	i.HTTPMethod = r.Method
+	if req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_TASK_ID) != "" {
+		i.TaskID = tukutil.GetIntFromString(req.FormValue(tukcnst.TUK_EVENT_QUERY_PARAM_TASK_ID))
+	} else {
+		i.TaskID = -1
+	}
+	i.HTTPMethod = req.Method
 	i.printFormValues()
 
 	i.HttpResponse.Write(i.handleRequest())
 }
-func uploadFile(w http.ResponseWriter, r *http.Request) {
-	tukutil.UploadFile(w, r)
-
-	log.Println("Creating Workflow Attachment Event")
-	i := TukEvent{}
-	i.Act = "UPLOAD"
-	i.Task = "FILE"
-	i.NHSId = r.FormValue("nhs")
-	i.Pathway = r.FormValue("pathway")
-	i.Topic = "Attachment"
-	i.Expression = r.FormValue("myFile")
-	i.EventServices.EventService.User = r.FormValue("user")
-	i.EventServices.EventService.Org = r.FormValue("org")
-	i.EventServices.EventService.Role = r.FormValue("role")
-	i.Notes = "File " + r.FormValue("myFile") + " attached to Workflow"
-	log.Printf("Attached %s to Workflow %s", r.FormValue("myFile"), r.FormValue("pathway"))
-	i.createUserEvent()
-}
-func (i *TukEvent) Println(msg string) {
-	if i.EventServices.EventService.Debugmode {
-		log.Println(msg)
-	}
-}
 func (i *TukEvent) printFormValues() {
-	if i.EventServices.EventService.Debugmode {
+	if DebugMode {
 		for key, values := range i.HttpRequest.Form {
-			i.Println("Key : " + key + " Value : " + values[0])
+			l("Key : "+key+" Value : "+values[0], true)
 		}
 	}
 }
@@ -1202,7 +1176,7 @@ func (i *TukEvent) printFormValues() {
 // Widgets
 
 func (i *TukEvent) GetWidget() []byte {
-	log.Printf("Processing %s Widget Request", i.Task)
+	l(fmt.Sprintf("Processing %s Widget Request", i.Task), true)
 	switch i.Task {
 	case tukcnst.SPA:
 		return i.UserSpaWidget()
@@ -1230,7 +1204,7 @@ func (i *TukEvent) XDWDocumentWidget() []byte {
 	var b bytes.Buffer
 	err := i.EventServices.HTMLTemplates.ExecuteTemplate(&b, tukcnst.TUK_TEMPLATE_WORKFLOW, i)
 	if err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		return []byte(err.Error())
 	}
 	return b.Bytes()
@@ -1239,7 +1213,7 @@ func (i *TukEvent) WorkflowTasksWidget() []byte {
 	var b bytes.Buffer
 	err := i.EventServices.HTMLTemplates.ExecuteTemplate(&b, tukcnst.TUK_TEMPLATE_WORKFLOW_TASKS, i)
 	if err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		return []byte(err.Error())
 	}
 	return b.Bytes()
@@ -1277,7 +1251,7 @@ func (i *TukEvent) DashboardWidget() []byte {
 	var err error
 	var tplReturn bytes.Buffer
 	if err = i.EventServices.HTMLTemplates.ExecuteTemplate(&tplReturn, tukcnst.TUK_TEMPLATE_DASHBOARD_WIDGET, i); err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 	}
 	return tplReturn.Bytes()
 }
@@ -1287,7 +1261,7 @@ func (i *TukEvent) TimelineWidget() []byte {
 	var err error
 	var tplReturn bytes.Buffer
 	if err = i.EventServices.HTMLTemplates.ExecuteTemplate(&tplReturn, tukcnst.TUK_TEMPLATE_TIMELINE_WIDGET, i); err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 	}
 	return tplReturn.Bytes()
 }
@@ -1308,7 +1282,7 @@ func (i *TukEvent) AdminSpaWidget() []byte {
 		InitTuki()
 	}
 	if err := i.EventServices.HTMLTemplates.ExecuteTemplate(&tplReturn, tukcnst.TUK_TEMPLATE_ADMIN_SPA_WIDGET, i); err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		return []byte(err.Error())
 	}
 	return tplReturn.Bytes()
@@ -1317,7 +1291,7 @@ func (i *TukEvent) UserSpaWidget() []byte {
 	i.EventServices.ActivePathways = tukxdw.GetActiveWorkflowNames()
 	var tplReturn bytes.Buffer
 	if err := i.EventServices.HTMLTemplates.ExecuteTemplate(&tplReturn, tukcnst.TUK_TEMPLATE_SPA_WIDGET, i); err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		return []byte(err.Error())
 	}
 	return tplReturn.Bytes()
@@ -1325,7 +1299,7 @@ func (i *TukEvent) UserSpaWidget() []byte {
 func (i *TukEvent) eventsWidget() []byte {
 	var tplReturn bytes.Buffer
 	if err := i.EventServices.HTMLTemplates.ExecuteTemplate(&tplReturn, tukcnst.TUK_TEMPLATE_EVENTS_WIDGET, i); err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		return []byte(err.Error())
 	}
 	return tplReturn.Bytes()
@@ -1334,7 +1308,7 @@ func (i *TukEvent) ConfigWidget() []byte {
 	var b bytes.Buffer
 	err := i.EventServices.HTMLTemplates.ExecuteTemplate(&b, tukcnst.TUK_TEMPLATE_CONFIG_WIDGET, i)
 	if err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		return []byte(err.Error())
 	}
 	return b.Bytes()
@@ -1343,7 +1317,7 @@ func (i *TukEvent) XDWDocumentsWidget() []byte {
 	var b bytes.Buffer
 	err := i.EventServices.HTMLTemplates.ExecuteTemplate(&b, tukcnst.TUK_TEMPLATE_WORKFLOWS_WIDGET, i)
 	if err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		return []byte(err.Error())
 	}
 	return b.Bytes()
@@ -1351,8 +1325,17 @@ func (i *TukEvent) XDWDocumentsWidget() []byte {
 func (i *TukEvent) SubscriptionsWidget() []byte {
 	var tplReturn bytes.Buffer
 	if err := i.EventServices.HTMLTemplates.ExecuteTemplate(&tplReturn, tukcnst.TUK_TEMPLATE_SUBSCRIPTIONS_WIDGET, i); err != nil {
-		log.Println(err.Error())
+		l(err.Error(), false)
 		return []byte(err.Error())
 	}
 	return tplReturn.Bytes()
+}
+func l(msg string, debug bool) {
+	if !debug {
+		log.Println(msg)
+	} else {
+		if DebugMode {
+			log.Println(msg)
+		}
+	}
 }

@@ -1,12 +1,12 @@
 {
     "id": "envvars",
-    "dbuser": "{{database user}}",
-    "dbpwd": "{{database password}}",
-    "dbhost": "{{database host name}}",
-    "dbport": "{{database port}}",
-    "dbname": "{{database name}}",
-    "broker": "{{url}}",
-    "consumer": "{{url}}",
-    "log": "{{true/fale}}",
-    "regoid": "{{ICS reg oid}}"
+    "dbuser": "",
+    "dbpwd": "",
+    "dbhost": "",
+    "dbport": "",
+    "dbname": "",
+    "broker": "",
+    "consumer": "",
+    "logenabled": "",
+    "regoid": ""
 }

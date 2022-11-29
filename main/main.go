@@ -28,7 +28,7 @@ type EnvVars struct {
 	DB_Port           string `json:"dbport"`
 	DSUB_Broker_URL   string `json:"broker"`
 	DSUB_Consumer_URL string `json:"consumer"`
-	Log_Enabled       string `json:"log"`
+	Log_Enabled       string `json:"logenabled"`
 	Reg_OID           string `json:"regoid"`
 }
 
@@ -58,7 +58,7 @@ func main() {
 				case "xdws":
 					tukint.PersistXDWConfigs()
 				case "db":
-					tukint.InitDatabase("tuk.sql")
+					tukint.InitDatabase("install/tuk.sql")
 				default:
 					log.Printf("param 2 value %s is not valid. Valid options are db,srvcs, tmplts,xdws", os.Args[2])
 				}
@@ -66,17 +66,18 @@ func main() {
 		}
 		tukdbint.DBConn.Close()
 		tukint.LogFile.Close()
-		log.Printf("Closed DB Connection\nCreated %s Database. TUK Event Manager should be good to 'go main/main.go' !", os.Getenv(tukcnst.ENV_DB_NAME))
+		log.Printf("Closed DB Connection\nCreated %s Database. TUK Event Manager should be good to 'go run main/main.go' !", os.Getenv(tukcnst.ENV_DB_NAME))
 	} else {
 		initTukManager()
 	}
 }
 func initTukManager() {
 	tukint.InitTuki()
-	log.Printf("TUK Event Server Enabled = %v", tukint.Services.EventService.Enabled)
+	log.Println("TUK Event Server is Enabled. Initialising Local Web Server")
 	if tukint.Services.EventService.Enabled {
 		tukint.TukEventServer()
 	} else {
+		log.Println("TUK Event Server is Disabled. Initialising AWS Lambda Function")
 		lambda.Start(tukint.Handle_AWS_API_GW_Request)
 	}
 }
