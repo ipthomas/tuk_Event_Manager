@@ -73,8 +73,8 @@ func main() {
 }
 func initTukManager() {
 	tukint.InitTuki()
-	log.Println("TUK Event Server is Enabled. Initialising Local Web Server")
 	if tukint.Services.EventService.Enabled {
+		log.Println("TUK Event Server is Enabled. Initialising Local Web Server")
 		tukint.TukEventServer()
 	} else {
 		log.Println("TUK Event Server is Disabled. Initialising AWS Lambda Function")
