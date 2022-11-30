@@ -6,7 +6,7 @@ require (
 	github.com/aws/aws-lambda-go v1.35.0
 	github.com/ipthomas/tukcnst v1.3.3
 	github.com/ipthomas/tukdbint v1.3.13
-	github.com/ipthomas/tukint v1.3.21
+	github.com/ipthomas/tukint v1.3.22
 )
 
 require (

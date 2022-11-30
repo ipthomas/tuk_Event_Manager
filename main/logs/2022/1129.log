@@ -49,3 +49,87 @@
 2022/11/29 21:20:09.647493 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
 2022/11/29 21:20:09.768085 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
 2022/11/29 21:20:09.768167 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 21:30:09.806363 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 21:30:09.807663 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 21:30:09.928456 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 21:30:09.928549 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 21:40:13.748048 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 21:40:13.748620 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 21:40:13.898790 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 21:40:13.898858 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 21:50:14.811260 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 21:50:14.812466 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 21:50:14.969224 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 21:50:14.969289 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 22:00:15.841110 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:00:15.842353 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 22:00:15.994405 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:00:15.994484 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 22:10:16.763386 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:10:16.764212 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 22:10:16.892685 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:10:16.892765 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 22:20:17.882516 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:20:17.883327 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 22:20:18.008369 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:20:18.008433 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 22:30:18.906279 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:30:18.906716 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 22:30:19.069638 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:30:19.069718 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 22:40:19.944050 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:40:19.945295 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 22:40:20.080099 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:40:20.080158 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 22:50:20.968303 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:50:20.969262 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 22:50:21.139870 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 22:50:21.139942 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 23:00:21.948172 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:00:21.948729 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 23:00:22.077427 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:00:22.077853 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 23:10:25.756955 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:10:25.757636 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 23:10:25.932351 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:10:25.932423 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 23:20:26.997391 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:20:26.997953 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 23:20:27.157133 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:20:27.157196 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 23:30:27.995095 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:30:27.995878 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 23:30:28.118875 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:30:28.118948 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 23:40:29.012036 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:40:29.012660 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 23:40:29.166135 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:40:29.166211 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 23:50:37.630632 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:50:37.631831 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 23:50:37.866419 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:50:37.866519 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 23:54:20.838333 server.go:3230: http: TLS handshake error from 192.168.1.132:63699: EOF
+2022/11/29 23:54:20.858112 server.go:3230: http: TLS handshake error from 192.168.1.132:63701: EOF
+2022/11/29 23:54:31.351640 tukint.go:1335: Received http GET request from 192.168.1.132:63703. Processing New Event
+2022/11/29 23:54:31.352926 tukint.go:739: Processing GET widget spa Request from 192.168.1.132:63703
+2022/11/29 23:54:32.114856 tukint.go:1335: Received http GET request from 192.168.1.132:63703. Processing New Event
+2022/11/29 23:54:32.114931 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:63703
+2022/11/29 23:54:32.704124 tukint.go:1335: Received http GET request from 192.168.1.132:63703. Processing New Event
+2022/11/29 23:54:32.704217 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:63703
+2022/11/29 23:55:02.566500 tukint.go:1335: Received http GET request from 192.168.1.132:63703. Processing New Event
+2022/11/29 23:55:02.567572 tukint.go:739: Processing GET widget xdw Request from 192.168.1.132:63703
+2022/11/29 23:55:02.584520 tukint.go:508: Duration = 176h27m38.584519s
+2022/11/29 23:55:06.832393 tukint.go:1335: Received http GET request from 192.168.1.132:63703. Processing New Event
+2022/11/29 23:55:06.832474 tukint.go:739: Processing GET admin  Request from 192.168.1.132:63703
+2022/11/29 23:56:04.675531 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:56:04.676145 tukint.go:739: Processing GET widget spa Request from 192.168.1.132:60584
+2022/11/29 23:56:05.472150 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:56:05.472233 tukint.go:739: Processing GET widget dashboard Request from 192.168.1.132:60584
+2022/11/29 23:56:06.215525 tukint.go:1335: Received http GET request from 192.168.1.132:60584. Processing New Event
+2022/11/29 23:56:06.215814 tukint.go:739: Processing GET widget xdws Request from 192.168.1.132:60584
+2022/11/29 23:59:18.173029 tukint.go:1335: 
+2022/11/29 23:59:18.174381 tukint.go:1335: *********************************
+2022/11/29 23:59:18.174415 tukint.go:1335: Exit command received. Exiting...
+2022/11/29 23:59:18.175046 tukint.go:1335: FATAL: CTRL+C pressed
+2022/11/29 23:59:18.175913 tukint.go:1335: Closed DB connection

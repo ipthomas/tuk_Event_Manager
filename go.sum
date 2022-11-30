@@ -13,10 +13,10 @@ github.com/ipthomas/tukdsub v1.3.10 h1:ni2p02KnT40y2IqlrlZbYhq4zasXin0g3Th2+lOU2
 github.com/ipthomas/tukdsub v1.3.10/go.mod h1:rCXLgbtmyol9ZwiLYQtxmZixmsI1fHhZplS8OLjttRo=
 github.com/ipthomas/tukhttp v1.3.5 h1:xz+ymrY5hhdl1VvAbvuozA4rHEsRknfNXGThizIV330=
 github.com/ipthomas/tukhttp v1.3.5/go.mod h1:fDSa6/X3OWpxQbNKCamvftfldynGXPN1faPl1ScWemk=
-github.com/ipthomas/tukint v1.3.20 h1:f44sGRgVqt6MCZG22PCg6QP795d6AGn2HU/jcQJ/RfE=
-github.com/ipthomas/tukint v1.3.20/go.mod h1:fHCqP+Lap0/Y5ZRUtU7kdGphTei2T2z/VrRg6Ca91HA=
 github.com/ipthomas/tukint v1.3.21 h1:WoxySnBTAXcD2zC9Fix0+QAu9O+xDtM4TCIiPgoZPJw=
 github.com/ipthomas/tukint v1.3.21/go.mod h1:U4itAP8k7Auzgq5IAe/9g1dJ5IVMYUvuqty4E3MKPpY=
+github.com/ipthomas/tukint v1.3.22 h1:isDs2bCCobjHZTX7r0EzgeoTcm0dcvKWC6m4l4LN5sQ=
+github.com/ipthomas/tukint v1.3.22/go.mod h1:U4itAP8k7Auzgq5IAe/9g1dJ5IVMYUvuqty4E3MKPpY=
 github.com/ipthomas/tukpdq v1.3.5 h1:9g3PBD9U5d6xCVzb11sad6noKXboE9BJ4uvpgbNSl0A=
 github.com/ipthomas/tukpdq v1.3.5/go.mod h1:UGJcuwmyyRsg0vuXzq+ap6EE0dSzdbCTaMFHWKUUrAs=
 github.com/ipthomas/tukutil v1.3.5 h1:9aycq15hOComgoqqtdjwDyVh0++6hyQGXdUFTVSDbTw=
