@@ -58,7 +58,7 @@ func main() {
 				case "xdws":
 					tukint.PersistXDWConfigs()
 				case "db":
-					tukint.InitDatabase("install/tuk.sql")
+					tukint.InitDatabase("tuk.sql")
 				default:
 					log.Printf("param 2 value %s is not valid. Valid options are db,srvcs, tmplts,xdws", os.Args[2])
 				}
