@@ -36,6 +36,17 @@ type TukDBConnection struct {
 	DB_URL        string
 	DBReader_Only bool
 }
+type Statics struct {
+	Action       string   `json:"action"`
+	LastInsertId int64    `json:"lastinsertid"`
+	Count        int      `json:"count"`
+	Static       []Static `json:"static"`
+}
+type Static struct {
+	Id      int64  `json:"id"`
+	Name    string `json:"name"`
+	Content []byte `json:"content"`
+}
 type ServiceStates struct {
 	Action       string         `json:"action"`
 	LastInsertId int64          `json:"lastinsertid"`
@@ -189,10 +200,10 @@ func (i *TukDBConnection) InitialiseDatabase(mysqlFile string) error {
 		i.DBUser,
 		i.DBPassword,
 		i.DBHost+i.DBPort)
-	l("Opening DB Connection to mysql instance via DSN - "+dsn, false)
+	log.Printf("Opening DB Connection to mysql instance via DSN - %s", dsn)
 	DBConn, err = sql.Open(tukcnst.MYSQL, dsn)
 	if err != nil {
-		l(fmt.Sprintf("Error %s when Opening DB Connection\n", err), false)
+		log.Printf("Error %s when Opening DB Connection\n", err)
 		return err
 	}
 	ctx, cancelfunc := context.WithTimeout(context.Background(), 5*time.Second)
@@ -200,7 +211,7 @@ func (i *TukDBConnection) InitialiseDatabase(mysqlFile string) error {
 	_, err = DBConn.ExecContext(ctx, "CREATE DATABASE IF NOT EXISTS "+i.DBName)
 	DBConn.Close()
 	if err != nil {
-		l(fmt.Sprintf("Error %s when Opening DB Connection\n", err), false)
+		log.Printf("Error %s when Opening DB Connection\n", err)
 		return err
 	}
 	return i.InitialiseDBTables(mysqlFile)
@@ -218,7 +229,7 @@ func (i *TukDBConnection) InitialiseDBTables(mysqlFile string) error {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		l(fmt.Sprintf("Error executing query. Command Output: %+v\n: %+v, %v", out.String(), stderr.String(), err), false)
+		log.Printf("Error executing query. Command Output: %+v\n: %+v, %v", out.String(), stderr.String(), err)
 		return err
 	}
 	return nil
@@ -239,7 +250,7 @@ func NewDBEvent(i TUK_DB_Interface) error {
 func (i *TukDBConnection) newEvent() error {
 	var err error
 	if i.DB_URL != "" {
-		l("Database API URL provided. Will connect to mysql instance via AWS API Gateway url "+i.DB_URL, true)
+		log.Printf("Database API URL provided. Will connect to mysql instance via AWS API Gateway url %s", i.DB_URL)
 		DB_URL = i.DB_URL
 	} else {
 		i.setDBCredentials()
@@ -253,7 +264,7 @@ func (i *TukDBConnection) newEvent() error {
 			i.DBName,
 			i.DBTimeout,
 			i.DBReadTimeout)
-		l("No Database API URL provided. Opening DB Connection to mysql instance via DSN - "+dsn, true)
+		log.Printf("No Database API URL provided. Opening DB Connection to mysql instance via DSN - %s", dsn)
 		DBConn, err = sql.Open(tukcnst.MYSQL, dsn)
 	}
 
@@ -307,13 +318,13 @@ func (i *Subscriptions) newEvent() error {
 	defer cancelCtx()
 	if len(i.Subscriptions) > 0 {
 		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.SUBSCRIPTIONS, reflectStruct(reflect.ValueOf(i.Subscriptions[0]))); err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 	}
 	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
 	if err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return err
 	}
 	defer sqlStmnt.Close()
@@ -321,7 +332,7 @@ func (i *Subscriptions) newEvent() error {
 	if i.Action == tukcnst.SELECT {
 		rows, err = setRows(ctx, sqlStmnt, vals)
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 
@@ -332,7 +343,7 @@ func (i *Subscriptions) newEvent() error {
 				case err == sql.ErrNoRows:
 					return nil
 				default:
-					l(err.Error(), false)
+					log.Println(err.Error())
 					return err
 				}
 			}
@@ -363,13 +374,13 @@ func (i *Events) newEvent() error {
 	defer cancelCtx()
 	if len(i.Events) > 0 {
 		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.EVENTS, reflectStruct(reflect.ValueOf(i.Events[0]))); err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 	}
 	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
 	if err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return err
 	}
 	defer sqlStmnt.Close()
@@ -377,7 +388,7 @@ func (i *Events) newEvent() error {
 	if i.Action == tukcnst.SELECT {
 		rows, err = setRows(ctx, sqlStmnt, vals)
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 
@@ -388,7 +399,7 @@ func (i *Events) newEvent() error {
 				case err == sql.ErrNoRows:
 					return nil
 				default:
-					l(err.Error(), false)
+					log.Println(err.Error())
 					return err
 				}
 			}
@@ -415,13 +426,13 @@ func GetPathwayWorkflows(pathway string) Workflows {
 func GetActiveWorkflowNames() map[string]string {
 	var activewfs = make(map[string]string)
 	wfs := GetWorkflows("", "", "", "", -1, false, tukcnst.TUK_STATUS_OPEN)
-	l(fmt.Sprintf("Open Workflow Count %v", wfs.Count), true)
+	log.Printf("Open Workflow Count %v", wfs.Count)
 	for _, v := range wfs.Workflows {
 		if v.Id != 0 {
 			activewfs[v.Pathway] = ""
 		}
 	}
-	l(fmt.Sprintf("Set %v Active Pathway Names - %s", len(activewfs), activewfs), true)
+	log.Printf("Set %v Active Pathway Names - %s", len(activewfs), activewfs)
 	return activewfs
 }
 func GetWorkflows(pathway string, nhsid string, xdwkey string, xdwuid string, version int, published bool, status string) Workflows {
@@ -443,13 +454,13 @@ func (i *Workflows) newEvent() error {
 	defer cancelCtx()
 	if len(i.Workflows) > 0 {
 		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.WORKFLOWS, reflectStruct(reflect.ValueOf(i.Workflows[0]))); err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 	}
 	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
 	if err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return err
 	}
 	defer sqlStmnt.Close()
@@ -457,7 +468,7 @@ func (i *Workflows) newEvent() error {
 	if i.Action == tukcnst.SELECT {
 		rows, err = setRows(ctx, sqlStmnt, vals)
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 		for rows.Next() {
@@ -467,7 +478,7 @@ func (i *Workflows) newEvent() error {
 				case err == sql.ErrNoRows:
 					return nil
 				default:
-					l(err.Error(), false)
+					log.Println(err.Error())
 					return err
 				}
 			}
@@ -491,7 +502,7 @@ func GetWorkflowDefinitionNames() map[string]string {
 			}
 		}
 	}
-	l(fmt.Sprintf("Returning %v XDW Config files", len(names)), true)
+	log.Printf("Returning %v XDW Config files", len(names))
 	return names
 }
 func GetWorkflowXDSMetaNames() []string {
@@ -506,7 +517,7 @@ func GetWorkflowXDSMetaNames() []string {
 			}
 		}
 	}
-	l(fmt.Sprintf("Returning %v XDS Meta files", len(xdwdefs)), true)
+	log.Printf("Returning %v XDS Meta files", len(xdwdefs))
 	return xdwdefs
 }
 func GetWorkflowDefinitions(name string) (XDWS, error) {
@@ -556,13 +567,13 @@ func (i *XDWS) newEvent() error {
 	defer cancelCtx()
 	if len(i.XDW) > 0 {
 		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.XDWS, reflectStruct(reflect.ValueOf(i.XDW[0]))); err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 	}
 	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
 	if err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return err
 	}
 	defer sqlStmnt.Close()
@@ -570,7 +581,7 @@ func (i *XDWS) newEvent() error {
 	if i.Action == tukcnst.SELECT {
 		rows, err = setRows(ctx, sqlStmnt, vals)
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 		for rows.Next() {
@@ -580,7 +591,7 @@ func (i *XDWS) newEvent() error {
 				case err == sql.ErrNoRows:
 					return nil
 				default:
-					l(err.Error(), false)
+					log.Println(err.Error())
 					return err
 				}
 			}
@@ -624,13 +635,13 @@ func (i *Templates) newEvent() error {
 	defer cancelCtx()
 	if len(i.Templates) > 0 {
 		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.TEMPLATES, reflectStruct(reflect.ValueOf(i.Templates[0]))); err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 	}
 	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
 	if err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return err
 	}
 	defer sqlStmnt.Close()
@@ -638,7 +649,7 @@ func (i *Templates) newEvent() error {
 	if i.Action == tukcnst.SELECT {
 		rows, err = setRows(ctx, sqlStmnt, vals)
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 		for rows.Next() {
@@ -648,7 +659,7 @@ func (i *Templates) newEvent() error {
 				case err == sql.ErrNoRows:
 					return nil
 				default:
-					l(err.Error(), false)
+					log.Println(err.Error())
 					return err
 				}
 			}
@@ -665,7 +676,7 @@ func GetIDMaps() IdMaps {
 	idmap := IdMap{}
 	idmaps.LidMap = append(idmaps.LidMap, idmap)
 	if err := idmaps.newEvent(); err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 	}
 	return idmaps
 }
@@ -674,7 +685,7 @@ func GetIDMapsMappedId(localid string) string {
 	idmap := IdMap{Lid: localid}
 	idmaps.LidMap = append(idmaps.LidMap, idmap)
 	if err := idmaps.newEvent(); err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return localid
 	}
 	if idmaps.Cnt == 1 {
@@ -687,7 +698,7 @@ func GetIDMapsLocalId(mid string) string {
 	idmap := IdMap{Mid: mid}
 	idmaps.LidMap = append(idmaps.LidMap, idmap)
 	if err := idmaps.newEvent(); err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return mid
 	}
 	if idmaps.Cnt == 1 {
@@ -707,13 +718,13 @@ func (i *IdMaps) newEvent() error {
 	defer cancelCtx()
 	if len(i.LidMap) > 0 {
 		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.ID_MAPS, reflectStruct(reflect.ValueOf(i.LidMap[0]))); err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 	}
 	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
 	if err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return err
 	}
 	defer sqlStmnt.Close()
@@ -721,7 +732,7 @@ func (i *IdMaps) newEvent() error {
 	if i.Action == tukcnst.SELECT {
 		rows, err = setRows(ctx, sqlStmnt, vals)
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 		for rows.Next() {
@@ -731,7 +742,7 @@ func (i *IdMaps) newEvent() error {
 				case err == sql.ErrNoRows:
 					return nil
 				default:
-					l(err.Error(), false)
+					log.Println(err.Error())
 					return err
 				}
 			}
@@ -779,13 +790,13 @@ func (i *ServiceStates) newEvent() error {
 	defer cancelCtx()
 	if len(i.ServiceState) > 0 {
 		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.SERVICE_STATES, reflectStruct(reflect.ValueOf(i.ServiceState[0]))); err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 	}
 	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
 	if err != nil {
-		l(err.Error(), false)
+		log.Println(err.Error())
 		return err
 	}
 	defer sqlStmnt.Close()
@@ -793,7 +804,7 @@ func (i *ServiceStates) newEvent() error {
 	if i.Action == tukcnst.SELECT {
 		rows, err = setRows(ctx, sqlStmnt, vals)
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return err
 		}
 		for rows.Next() {
@@ -803,7 +814,7 @@ func (i *ServiceStates) newEvent() error {
 				case err == sql.ErrNoRows:
 					return nil
 				default:
-					l(err.Error(), false)
+					log.Println(err.Error())
 					return err
 				}
 			}
@@ -815,14 +826,53 @@ func (i *ServiceStates) newEvent() error {
 	}
 	return err
 }
-func HasEventAck(eventid int64) bool {
-	evacks := EventAcks{Action: tukcnst.SELECT}
-	evack := EventAck{EventID: eventid}
-	evacks.EventAck = append(evacks.EventAck, evack)
-	if err := evacks.newEvent(); err != nil {
-		l(err.Error(), false)
+func (i *Statics) newEvent() error {
+	if DB_URL != "" {
+		return i.newAWSEvent()
 	}
-	return evacks.Cnt > 0
+	var err error
+	var stmntStr = tukcnst.SQL_DEFAULT_STATICS
+	var rows *sql.Rows
+	var vals []interface{}
+	ctx, cancelCtx := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancelCtx()
+	if len(i.Static) > 0 {
+		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.STATICS, reflectStruct(reflect.ValueOf(i.Static[0]))); err != nil {
+			log.Println(err.Error())
+			return err
+		}
+	}
+	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+	defer sqlStmnt.Close()
+
+	if i.Action == tukcnst.SELECT {
+		rows, err = setRows(ctx, sqlStmnt, vals)
+		if err != nil {
+			log.Println(err.Error())
+			return err
+		}
+		for rows.Next() {
+			s := Static{}
+			if err := rows.Scan(&s.Id, &s.Name, &s.Content); err != nil {
+				switch {
+				case err == sql.ErrNoRows:
+					return nil
+				default:
+					log.Println(err.Error())
+					return err
+				}
+			}
+			i.Static = append(i.Static, s)
+			i.Count = i.Count + 1
+		}
+	} else {
+		i.LastInsertId, err = setLastID(ctx, sqlStmnt, vals)
+	}
+	return err
 }
 func GetTaskNotes(pwy string, nhsid string, taskid int, ver int) string {
 	notes := ""
@@ -836,57 +886,9 @@ func GetTaskNotes(pwy string, nhsid string, taskid int, ver int) string {
 				notes = notes + note.Comments + "\n"
 			}
 		}
-		l(fmt.Sprintf("Found TaskId %v Notes %s", taskid, notes), true)
+		log.Printf("Found TaskId %v Notes %s", taskid, notes)
 	}
 	return notes
-}
-func (i *EventAcks) newEvent() error {
-	if DB_URL != "" {
-		return i.newAWSEvent()
-	}
-	var err error
-	var stmntStr = tukcnst.SQL_DEFAULT_EVENT_ACKS
-	var rows *sql.Rows
-	var vals []interface{}
-	ctx, cancelCtx := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancelCtx()
-	if len(i.EventAck) > 0 {
-		if stmntStr, vals, err = createPreparedStmnt(i.Action, tukcnst.EVENT_ACKS, reflectStruct(reflect.ValueOf(i.EventAck[0]))); err != nil {
-			l(err.Error(), false)
-			return err
-		}
-	}
-	sqlStmnt, err := DBConn.PrepareContext(ctx, stmntStr)
-	if err != nil {
-		l(err.Error(), false)
-		return err
-	}
-	defer sqlStmnt.Close()
-
-	if i.Action == tukcnst.SELECT {
-		rows, err = setRows(ctx, sqlStmnt, vals)
-		if err != nil {
-			l(err.Error(), false)
-			return err
-		}
-		for rows.Next() {
-			eventack := EventAck{}
-			if err := rows.Scan(&eventack.Id, &eventack.CreationTime, &eventack.EventID, &eventack.User, &eventack.Org, &eventack.Role); err != nil {
-				switch {
-				case err == sql.ErrNoRows:
-					return nil
-				default:
-					l(err.Error(), false)
-					return err
-				}
-			}
-			i.EventAck = append(i.EventAck, eventack)
-			i.Cnt = i.Cnt + 1
-		}
-	} else {
-		i.LastInsertId, err = setLastID(ctx, sqlStmnt, vals)
-	}
-	return err
 }
 func reflectStruct(i reflect.Value) map[string]interface{} {
 	params := make(map[string]interface{})
@@ -969,7 +971,7 @@ func createPreparedStmnt(action string, table string, params map[string]interfac
 			paramStr = strings.TrimSuffix(paramStr, " AND ")
 			stmntStr = stmntStr + paramStr
 		}
-		l(fmt.Sprintf("Created Prepared Statement %s - Values %s", stmntStr, vals), true)
+		log.Printf("Created Prepared Statement %s - Values %s", stmntStr, vals)
 	}
 	return stmntStr, vals, nil
 }
@@ -984,12 +986,12 @@ func setLastID(ctx context.Context, sqlStmnt *sql.Stmt, vals []interface{}) (int
 	if len(vals) > 0 {
 		sqlrslt, err := sqlStmnt.ExecContext(ctx, vals...)
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return 0, err
 		}
 		id, err := sqlrslt.LastInsertId()
 		if err != nil {
-			l(err.Error(), false)
+			log.Println(err.Error())
 			return 0, err
 		} else {
 			return id, nil
@@ -999,6 +1001,14 @@ func setLastID(ctx context.Context, sqlStmnt *sql.Stmt, vals []interface{}) (int
 }
 
 // functions for AWS Aurora DB Access via AWS API GW URL
+func (i *Statics) newAWSEvent() error {
+	body, _ := json.Marshal(i)
+	awsreq := aws_APIRequest(i.Action, tukcnst.STATICS, body)
+	if err := tukhttp.NewRequest(&awsreq); err != nil {
+		return err
+	}
+	return json.Unmarshal(awsreq.Response, &i)
+}
 func (i *ServiceStates) newAWSEvent() error {
 	body, _ := json.Marshal(i)
 	awsreq := aws_APIRequest(i.Action, tukcnst.SERVICE_STATES, body)
@@ -1047,14 +1057,6 @@ func (i *IdMaps) newAWSEvent() error {
 	}
 	return json.Unmarshal(awsreq.Response, &i)
 }
-func (i *EventAcks) newAWSEvent() error {
-	body, _ := json.Marshal(i)
-	awsreq := aws_APIRequest(i.Action, tukcnst.EVENT_ACKS, body)
-	if err := tukhttp.NewRequest(&awsreq); err != nil {
-		return err
-	}
-	return json.Unmarshal(awsreq.Response, &i)
-}
 func (i *Templates) newAWSEvent() error {
 	body, _ := json.Marshal(i)
 	awsreq := aws_APIRequest(i.Action, tukcnst.TEMPLATES, body)
@@ -1070,14 +1072,5 @@ func aws_APIRequest(action string, resource string, body []byte) tukhttp.AWS_API
 		Resource: resource,
 		Timeout:  5,
 		Body:     body,
-	}
-}
-func l(msg string, debug bool) {
-	if !debug {
-		log.Println(msg)
-	} else {
-		if DebugMode {
-			log.Println(msg)
-		}
 	}
 }

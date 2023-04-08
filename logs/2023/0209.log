@@ -1,0 +1,49 @@
+2023/02/09 14:55:21.311675 tukutil.go:141: -----------------------------------------------------------------------------------
+2023/02/09 14:55:21.311700 tukint.go:228: Initialising Service States
+2023/02/09 14:55:21.311719 tukdbint.go:256: No Database API URL provided. Opening DB Connection to mysql instance via DSN - root:rootPass@tcp(localhost:3306)/tuk?parseTime=true&timeout=5s&readTimeout=2s
+2023/02/09 14:55:21.311850 tukint.go:309: Loading Service Configuration eventsrvc
+2023/02/09 14:55:21.312106 tukdbint.go:915: Created Prepared Statement SELECT * FROM servicestates WHERE name= ? - Values [eventsrvc]
+2023/02/09 14:55:21.318821 tukint.go:374: Set TUK Event Server Event Service WSE https://MacBook-Pro.lan:8381/
+2023/02/09 14:55:21.318850 tukint.go:343: Initialised TUK Event Server State
+2023/02/09 14:55:21.318917 tukint.go:309: Loading Service Configuration brokersrvc
+2023/02/09 14:55:21.318927 tukdbint.go:915: Created Prepared Statement SELECT * FROM servicestates WHERE name= ? - Values [brokersrvc]
+2023/02/09 14:55:21.319519 tukint.go:374: Set IHE DSUB Broker Event Service WSE http://spirit-test-01.tianispirit.co.uk:8081/SpiritXDSDsub/Dsub
+2023/02/09 14:55:21.319534 tukint.go:343: Initialised IHE DSUB Broker State
+2023/02/09 14:55:21.319544 tukint.go:309: Loading Service Configuration pdqv3srvc
+2023/02/09 14:55:21.319553 tukdbint.go:915: Created Prepared Statement SELECT * FROM servicestates WHERE name= ? - Values [pdqv3srvc]
+2023/02/09 14:55:21.320062 tukint.go:374: Set IHE PDQv3 Server Event Service WSE http://spirit-test-01.tianispirit.co.uk:8081/SpiritPIX/PDQSupplier
+2023/02/09 14:55:21.320092 tukint.go:343: Initialised IHE PDQv3 Server State
+2023/02/09 14:55:21.320099 tukint.go:309: Loading Service Configuration pixmsrvc
+2023/02/09 14:55:21.320107 tukdbint.go:915: Created Prepared Statement SELECT * FROM servicestates WHERE name= ? - Values [pixmsrvc]
+2023/02/09 14:55:21.320617 tukint.go:374: Set Tiani Spirit IHE PIXm FHIR Service Event Service WSE http://spirit-test-01.tianispirit.co.uk:8081/SpiritPIXFhir/r4/Patient
+2023/02/09 14:55:21.320625 tukint.go:343: Initialised Tiani Spirit IHE PIXm FHIR Service State
+2023/02/09 14:55:21.320630 tukint.go:309: Loading Service Configuration xdsrepsrvc
+2023/02/09 14:55:21.320635 tukdbint.go:915: Created Prepared Statement SELECT * FROM servicestates WHERE name= ? - Values [xdsrepsrvc]
+2023/02/09 14:55:21.321084 tukint.go:374: Set Tiani Spirit WS API XDS Repository Service Event Service WSE http://spirit-test-01.tianispirit.co.uk:8181/SpiritEhrWsRemoting/EhrWSRemoting
+2023/02/09 14:55:21.321092 tukint.go:343: Initialised Tiani Spirit WS API XDS Repository Service State
+2023/02/09 14:55:21.321098 tukint.go:309: Loading Service Configuration xdsregsrvc
+2023/02/09 14:55:21.321112 tukdbint.go:915: Created Prepared Statement SELECT * FROM servicestates WHERE name= ? - Values [xdsregsrvc]
+2023/02/09 14:55:21.321425 tukint.go:374: Set Tiani Spirit IHE XDS Registry Service Event Service WSE http://spirit-test-01.tianispirit.co.uk:8081/SpiritXDSRegistry/Reg1
+2023/02/09 14:55:21.321434 tukint.go:343: Initialised Tiani Spirit IHE XDS Registry Service State
+2023/02/09 14:55:21.321461 tukdbint.go:915: Created Prepared Statement SELECT * FROM xdws WHERE isxdsmeta= ? - Values [%!s(bool=false)]
+2023/02/09 14:55:21.322034 tukdbint.go:494: Returning 4 XDW Config files
+2023/02/09 14:55:21.322062 tukdbint.go:915: Created Prepared Statement SELECT * FROM xdws WHERE isxdsmeta= ? - Values [%!s(bool=true)]
+2023/02/09 14:55:21.322346 tukdbint.go:509: Returning 4 XDS Meta files
+2023/02/09 14:55:21.322369 tukdbint.go:915: Created Prepared Statement SELECT * FROM workflows WHERE published= ? AND status= ? - Values [%!s(bool=false) OPEN]
+2023/02/09 14:55:21.323281 tukdbint.go:418: Open Workflow Count 4
+2023/02/09 14:55:21.323451 tukdbint.go:424: Set 3 Active Pathway Names - map[pathalert: radconsult: toc:]
+2023/02/09 14:55:21.323460 tukint.go:302: Initialised 6 Event Services
+2023/02/09 14:55:21.323489 tukint.go:235: Configured Event Service Host Name MacBook-Pro.lan is equal to the OS Host Name MacBook-Pro.lan. So thats all good then!
+2023/02/09 14:55:21.324394 tukint.go:245: loaded 17 Templates
+2023/02/09 14:55:21.325374 tukint.go:223: Set Regional OID 2.16.840.1.113883.2.1.3.31.2.1.1 from Environment Var REG_OID
+2023/02/09 14:55:21.325395 main.go:78: TUK Event Server is Enabled. Initialising Local Web Server
+2023/02/09 14:55:21.325400 tukint.go:976: Event Service set to Debug Mode : true
+2023/02/09 14:55:21.325405 tukint.go:978: Event Service set to Demo Mode : true
+2023/02/09 14:55:21.325409 tukint.go:980: Event Service set to Secure Mode : true
+2023/02/09 14:55:21.325424 tukint.go:984: Inialised Event Management Handler - https://MacBook-Pro.lan:8381/
+2023/02/09 14:55:21.325783 tukint.go:987: Initialised Application Monitor
+2023/02/09 14:55:21.325791 tukint.go:996: Starting TUK Event Server
+2023/02/09 14:55:21.325794 tukint.go:997: Listening for DSUB Notifications on https://MacBook-Pro.lan:8381/eventservice/event
+2023/02/09 14:55:21.325796 tukint.go:998: Event Manager Swagger API. https://MacBook-Pro.lan:8381/
+2023/02/09 14:55:21.325799 tukint.go:999: Event Manager Admin GUI. https://MacBook-Pro.lan:8381/eventservice/event?act=admin&user=test&org=spirit&role=admin
+2023/02/09 14:55:21.325870 tukint.go:990: listen tcp :8381: bind: address already in use

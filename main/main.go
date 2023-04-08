@@ -33,6 +33,7 @@ type EnvVars struct {
 }
 
 func main() {
+	os.Setenv("Log_Enabled", "true")
 	loadEnvVars(tukint.Basepath + "envvars.json")
 	if len(os.Args) > 1 && os.Args[1] == "init" {
 		dbconn := tukdbint.TukDBConnection{DBUser: os.Getenv(tukcnst.ENV_DB_USER), DBPassword: os.Getenv(tukcnst.ENV_DB_PASSWORD), DBHost: os.Getenv(tukcnst.ENV_DB_HOST), DBPort: os.Getenv(tukcnst.ENV_DB_PORT), DBName: os.Getenv(tukcnst.ENV_DB_NAME)}
